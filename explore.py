@@ -4,19 +4,20 @@ import os
 from PIL import Image
 import tkinter as tk       
 import itertools
+import math
 
 
 
 
 
 
-def process(box=(-2.5, 1.5, 1.5, -1.5), fn="2.png"):
+def process(box=(-2.5, 1.5, 1.5, -1.5), fn="2.png", k_num = 256):
 
 
     # Program "mandel.x86" is compiled from the code at :
     #       https://github.com/skeeto/mandel-simd
     #
-    os.system("./mandel.x86 -w 1440 -h 1080 -d 256 -x {0}:{2} -y {3}:{1} -k 256 > m.txt".format(*box))
+    os.system("./mandel.x86 -w 1440 -h 1080 -d 256 -x {0}:{2} -y {3}:{1} -k {4} > m.txt".format(*box, k_num))
 
 
 
@@ -67,13 +68,15 @@ old_box = (-2.5,1.5,1.5,-1.5)
 
 new_box = None
 
+kk = 256
+
 
 for i in itertools.count(1):
 
 
     new_box = None
 
-    process(old_box, "{0}.png".format(i))
+    process(old_box, "{0}.png".format(i), k_num = kk )
 
 
     def __btnDown(event):
@@ -135,7 +138,31 @@ for i in itertools.count(1):
     if new_box is None:
         break
     else:
-        old_box = new_box
+        # Fix the aspect ratio to 1440:1080
+        
+        m_1 = (new_box[2] - new_box[0])/1440.
+        m_2 = (new_box[1] - new_box[3])/1080.
+      
+        m_max = max(m_1, m_2)
+      
+        x_cent = (new_box[2] + new_box[0])/2.
+        y_cent = (new_box[1] + new_box[3])/2.
+        
+        
+      
+      
+        old_box = ( x_cent-m_max*720.,  y_cent+m_max*540.  , x_cent+m_max*720. ,   y_cent-m_max*540.)
+        
+        
+        mag = math.log10(0.002777778/m_max)
+        if mag > 4:
+            kk = 1024
+        if mag > 6:
+            kk = 4196
+        
+        print("    Magnification = 10^{0:0.3f}".format(mag))
+        
+        
         new_box = None
     
 
