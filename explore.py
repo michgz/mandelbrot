@@ -10,13 +10,13 @@ import itertools
 
 
 
-def process(box=(-2.5, -1.5, 1.5, 1.5), fn="2.png"):
+def process(box=(-2.5, 1.5, 1.5, -1.5), fn="2.png"):
 
 
     # Program "mandel.x86" is compiled from the code at :
     #       https://github.com/skeeto/mandel-simd
     #
-    os.system("./mandel.x86 -w 1440 -h 1080 -d 256 -x {0}:{2} -y {1}:{3} -k 256 > m.txt".format(*box))
+    os.system("./mandel.x86 -w 1440 -h 1080 -d 256 -x {0}:{2} -y {3}:{1} -k 256 > m.txt".format(*box))
 
 
 
@@ -63,7 +63,7 @@ def process(box=(-2.5, -1.5, 1.5, 1.5), fn="2.png"):
 
 last_pos = None
 
-old_box = (-2.5,-1.5,1.5,1.5)
+old_box = (-2.5,1.5,1.5,-1.5)
 
 new_box = None
 
@@ -90,18 +90,25 @@ for i in itertools.count(1):
                 new_box_ = [0.,0.,0.,0.]
                 
                 new_box_[0] = old_box[0] + (old_box[2] - old_box[0])*float(last_pos[0] - 0)/(1440.)
-                new_box_[1] = old_box[1] + (old_box[3] - old_box[1])*float(last_pos[1] - 0)/(1080.)
+                new_box_[1] = old_box[3] + (old_box[1] - old_box[3])*float((1079-last_pos[1]) - 0)/(1080.)
                 new_box_[2] = old_box[0] + (old_box[2] - old_box[0])*float(event.x - 0)/(1440.)
-                new_box_[3] = old_box[1] + (old_box[3] - old_box[1])*float(event.y - 0)/(1080.)
+                new_box_[3] = old_box[3] + (old_box[1] - old_box[3])*float((1079-event.y) - 0)/(1080.)
                 
                 new_box = tuple(new_box_)
                 
-                print(new_box)
+                print("(X={0}, Y={1})  --  (X={2}, Y={3})".format(*new_box))
                 
               
             last_pos = None
 
 
+    def __pos(event):
+        new_box_ = [0., 0.]
+        
+        new_box_[0] = old_box[0] + (old_box[2] - old_box[0])*float(event.x - 0)/(1440.)
+        new_box_[1] = old_box[1] + (old_box[3] - old_box[1])*float((1079-event.y) - 0)/(1080.)
+        
+        print("X: {0}, Y: {1}".format(new_box_[0] ,new_box_[1] ))
 
 
     ws = tk.Tk()
@@ -118,6 +125,7 @@ for i in itertools.count(1):
 
     p.bind('<Button-1>', __btnDown)
     p.bind('<ButtonRelease-1>', __btnUp)
+    #p.bind('<Motion>', __pos)
 
     ws.mainloop()
     
