@@ -5,6 +5,9 @@ from PIL import Image
 import tkinter as tk       
 import itertools
 import math
+import time
+import datetime
+import random
 
 
 
@@ -61,6 +64,27 @@ def process(box=(-2.5, 1.5, 1.5, -1.5), fn="2.png", k_num = 256):
 
 
 
+def process_josch(center=(0.,0.), magn=1., fn_root="1"):
+  
+    t_1 = time.monotonic()
+  
+    os.system("./mandel_mpfr 1440 1080 {0:f} {1:f} {2} > tmp.ppm".format(center[0], center[1], magn))
+
+    t_2 = time.monotonic()
+    
+    with open(fn_root + "_Info.txt", "w") as f1:
+        f1.write("Calculated {0}\n".format(datetime.datetime.now().isoformat()))
+        f1.write("Time taken: {0:f} second\n".format(t_2 - t_1))
+        f1.write("Center: ( {0:f}, {1:f} )\n".format(*center))
+        f1.write("Magnification: {0:f}\n".format(magn))
+        
+    img = Image.open("tmp.ppm")
+    img.save(fn_root + ".png")
+
+
+
+
+
 
 last_pos = None
 
@@ -75,8 +99,19 @@ for i in itertools.count(1):
 
 
     new_box = None
+    
+    file_name = None
 
-    process(old_box, "{0}.png".format(i), k_num = kk )
+    if False:
+        # Fast, but only to 10^5 magnification
+        file_name = "{0}.png".format(i)
+        process(old_box, file_name, k_num = kk )
+    else:
+        # Slow, but arbitrary magnification
+        file_name = "{0:07x}".format(random.randint(0,0xFFFFFFF))
+        process_josch(center=((old_box[1]+old_box[0])/2., (old_box[3]+old_box[2])/2.), magn=4./(old_box[1]-old_box[0]), fn_root=file_name)
+        file_name += ".png"
+    
 
 
     def __btnDown(event):
@@ -118,7 +153,7 @@ for i in itertools.count(1):
     ws.title('Mandelbrot Explorer')
 
 
-    img = tk.PhotoImage(file='{0}.png'.format(i))
+    img = tk.PhotoImage(file=file_name)
     p = tk.Label(
         ws,
         image=img
