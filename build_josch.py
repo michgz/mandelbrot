@@ -27,11 +27,11 @@ MPFR_DIR = pathlib.Path("mpfr-4.1.0")
 GMP_DIR = pathlib.Path("gmp-6.2.1")
 
 
-
 # Make MPFR - must be already configured, and have "m4" installed
 old_cwd = os.get_cwd()
 os.chdir(str(MPFR_DIR))
 os.system("make all")
+os.chdir(old_cwd)
 
 
 # Make GMP - must be already configured
@@ -46,7 +46,7 @@ shutil.copy(str(GMP_DIR.joinpath(".libs", "libgmp.so")), ".")
 
 
 # Make josch's program. 
-os.system("gcc -O3 -Wall -I /usr/local/include -L /usr/local/lib mandel_mpfr.c libgmp.so libmpfr.so -lm -o mandel_mpfr")
+os.system("gcc -O3 -Wall -I /usr/local/include -I {0} -L /usr/local/lib mandel_mpfr.c libgmp.so libmpfr.so -lm -o mandel_mpfr".format(str(MPFR_DIR.joinpath("src"))))
 
 
 # Done!
